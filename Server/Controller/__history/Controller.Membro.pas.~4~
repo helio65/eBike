@@ -1,0 +1,99 @@
+unit Controller.Membro;
+
+interface
+
+uses
+  MVCFramework, MVCFramework.Commons;
+
+type
+
+  [MVCPath('/api')]
+  TMembro = class(TMVCController) 
+  public
+    [MVCPath]
+    [MVCHTTPMethod([httpGET])]
+    procedure Index;
+
+  protected
+    procedure OnBeforeAction(Context: TWebContext; const AActionName: string; var Handled: Boolean); override;
+    procedure OnAfterAction(Context: TWebContext; const AActionName: string); override;
+
+  public
+    //Sample CRUD Actions for a "Customer" entity
+    [MVCPath('/membros')]
+    [MVCHTTPMethod([httpGET])]
+    procedure GetMembros;
+
+    [MVCPath('/membros/($CO_Membro)')]
+    [MVCHTTPMethod([httpGET])]
+    procedure GetMembro(CO_Membro: Integer);
+
+    [MVCPath('/membros')]
+    [MVCHTTPMethod([httpPOST])]
+    procedure AddMembro;
+
+    [MVCPath('/membros/($CO_Membro)')]
+    [MVCHTTPMethod([httpPUT])]
+    procedure UpdateMembro(CO_Membro: Integer);
+
+    [MVCPath('/membros/($CO_Membro)')]
+    [MVCHTTPMethod([httpDELETE])]
+    procedure DeleteMembro(CO_Membro: Integer);
+
+  end;
+
+implementation
+
+uses
+  System.SysUtils, MVCFramework.Logger, System.StrUtils;
+
+procedure TMembro.Index;
+begin
+  //use Context property to access to the HTTP request and response 
+  Render('Hello DelphiMVCFramework World');
+end;
+
+procedure TMembro.OnAfterAction(Context: TWebContext; const AActionName: string); 
+begin
+  { Executed after each action }
+  inherited;
+end;
+
+procedure TMembro.OnBeforeAction(Context: TWebContext; const AActionName: string; var Handled: Boolean);
+begin
+  { Executed before each action
+    if handled is true (or an exception is raised) the actual
+    action will not be called }
+  inherited;
+end;
+
+//Sample CRUD Actions for a "Customer" entity
+procedure TMembro.GetMembros;
+begin
+  //todo: render a list of customers
+end;
+
+procedure TMembro.GetMembro(CO_Membro: Integer);
+begin
+  //todo: render the customer by id
+end;
+
+procedure TMembro.AddMembro;
+
+begin
+  //todo: create a new customer
+end;
+
+procedure TMembro.UpdateMembro(CO_Membro: Integer);
+begin
+  //todo: update customer by id
+end;
+
+procedure TMembro.DeleteMembro(CO_Membro: Integer);
+begin
+  //todo: delete customer by id
+end;
+
+
+
+end.

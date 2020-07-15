@@ -1,0 +1,272 @@
+unit Model.EventoParticipante;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants, FireDAC.Stan.Param;
+
+type
+   TEventoParticipante = class
+   private
+    Fco_evento_participante: Integer;
+    Fdt_cadastro: TDateTime;
+    Fco_evento: Integer;
+    Fco_membro: Integer;
+    procedure Setco_evento(const Value: Integer);
+    procedure Setco_evento_participante(const Value: Integer);
+    procedure Setco_membro(const Value: Integer);
+    procedure Setdt_cadastro(const Value: TDateTime);
+   public
+      class function GetByID(ACO_Evento_Participante : Integer)                  : TEventoParticipante;
+      class function GetAll                                                      : TObjectList<TEventoParticipante>;
+      class function Add(AEventoParticipante : TObjectList<TEventoParticipante>) : Boolean;
+      class function Update(AEventoParticipante : TEventoParticipante)           : Boolean;
+      class function Delete(ACO_Evento_Participante : Integer)                   : Boolean;
+
+      property co_evento_participante : Integer read Fco_evento_participante write Setco_evento_participante;
+      property co_evento : Integer read Fco_evento write Setco_evento;
+      property co_membro : Integer read Fco_membro write Setco_membro;
+      property dt_cadastro : TDateTime read Fdt_cadastro write Setdt_cadastro;
+   end;
+
+implementation
+
+{ TEventoParticipante }
+
+uses
+   Dados0;
+
+class function TEventoParticipante.Add(AEventoParticipante: TObjectList<TEventoParticipante>): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   ALista      : TObjectList<TEventoParticipante>;
+   AItens      : TEnumerator<TEventoParticipante>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('INSERT INTO EVENTO_PARTICIPANTE (CO_EVENTO_PARTICIPANTE, CO_EVENTO, CO_MEMBRO, DT_CADASTRO)             ').
+               Append('                 VALUES (GEN_ID(INC_CO_EVENTO_PARTICIPANTE, :CO_EVENTO, :CO_MEMBRO, CURRENT_TIMESTAMP); ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         ALista := TObjectList<TEventoParticipante>.Create;
+         AItens := ALista.GetEnumerator;
+
+         while AItens.MoveNext do begin
+
+            AFDQuery.ParamByName('CO_EVENTO').AsInteger := AItens.Current.co_evento;
+            AFDQuery.ParamByName('CO_MEMBRO').AsInteger := AItens.Current.co_membro;
+
+            AFDQuery.ExecSQL;
+
+         end;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+      ALista.Free;
+   end;
+
+end;
+
+class function TEventoParticipante.Update(AEventoParticipante: TEventoParticipante): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('UPDATE EVENTO_PARTICIPANTE                                 ').
+               Append('   SET CO_EVENTO = :CO_EVENTO,                             ').
+               Append('       CO_MEMBRO = :CO_MEMBRO                              ').
+               Append('   WHERE CO_EVENTO_PARTICIPANTE = :CO_EVENTO_PARTICIPANTE; ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.ParamByName('CO_EVENTO').AsInteger              := AEventoParticipante.co_evento;
+         AFDQuery.ParamByName('CO_MEMBRO').AsInteger              := AEventoParticipante.co_membro;
+         AFDQuery.ParamByName('CO_EVENTO_PARTICIPANTE').AsInteger := AEventoParticipante.co_evento_participante;
+
+         AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TEventoParticipante.Delete(ACO_Evento_Participante: Integer): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('DELETE FROM EVENTO_PARTICIPANTE                            ').
+               Append('   WHERE CO_EVENTO_PARTICIPANTE = :CO_EVENTO_PARTICIPANTE; ');
+   ADMCon := TDM0.Create(nil);
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         Result :=  ADMCon.Conexao.ExecSQL(AStrBuilder.ToString, [ACO_Evento_Participante]) > 0;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+   end;
+
+end;
+
+class function TEventoParticipante.GetAll: TObjectList<TEventoParticipante>;
+var
+   AStrBuilder         : TStringBuilder;
+   ADMCon              : TDM0;
+   AFDQuery            : TFDQuery;
+   AEventoParticipante : TEventoParticipante;
+   AStrStream          : TStringStream;
+   AListMembro         : TObjectList<TEventoParticipante>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_EVENTO_PARTICIPANTE, CO_EVENTO, CO_MEMBRO, DT_CADASTRO ').
+               Append('   FROM EVENTO_PARTICIPANTE;                                     ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+      AListMembro := TObjectList<TEventoParticipante>.Create;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString);
+
+         AFDQuery.First;
+
+         while not AFDQuery.Eof do begin
+
+            AEventoParticipante                := TEventoParticipante.Create;
+            AEventoParticipante.co_evento_foto := AFDQuery.FieldByName('CO_EVENTO_FOTO').AsInteger;
+            AEventoParticipante.co_evento      := AFDQuery.FieldByName('CO_EVENTO').AsInteger;
+
+            AListMembro.Add(AEventoParticipante);
+
+            AFDQuery.Next;
+
+         end;
+
+         Result := AListMembro;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TEventoParticipante.GetByID(ACO_Evento_Participante: Integer): TEventoParticipante;
+begin
+
+end;
+
+procedure TEventoParticipante.Setco_evento(const Value: Integer);
+begin
+  Fco_evento := Value;
+end;
+
+procedure TEventoParticipante.Setco_evento_participante(const Value: Integer);
+begin
+  Fco_evento_participante := Value;
+end;
+
+procedure TEventoParticipante.Setco_membro(const Value: Integer);
+begin
+  Fco_membro := Value;
+end;
+
+procedure TEventoParticipante.Setdt_cadastro(const Value: TDateTime);
+begin
+  Fdt_cadastro := Value;
+end;
+
+end.

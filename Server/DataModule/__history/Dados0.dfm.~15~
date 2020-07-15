@@ -1,0 +1,29 @@
+object DM0: TDM0
+  OldCreateOrder = False
+  Height = 277
+  Width = 294
+  object FDPhysFBDriverLink1: TFDPhysFBDriverLink
+    Left = 72
+    Top = 88
+  end
+  object FDGUIxWaitCursor1: TFDGUIxWaitCursor
+    Provider = 'Forms'
+    Left = 72
+    Top = 144
+  end
+  object FDManager1: TFDManager
+    FormatOptions.AssignedValues = [fvMapRules]
+    FormatOptions.OwnMapRules = True
+    FormatOptions.MapRules = <>
+    Active = True
+    Left = 72
+    Top = 32
+  end
+  object Con_ebike: TFDConnection
+    Params.Strings = (
+      'ConnectionDef=Con_eBike')
+    LoginPrompt = False
+    Left = 184
+    Top = 72
+  end
+end

@@ -1,0 +1,337 @@
+unit
+   Model.EventoFoto;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants, FireDAC.Stan.Param;
+
+type
+   TEventoFoto = class
+   private
+    Fco_evento_foto: integer;
+    Fim_foto: String;
+    Fco_evento: integer;
+    procedure Setco_evento_foto(const Value: integer);
+    procedure Setco_evento(const Value: integer);
+    procedure Setim_foto(const Value: String);
+   public
+      class function GetByID(ACO_Evento_Foto : Integer)                : TEventoFoto;
+      class function GetAll                                            : TObjectList<TEventoFoto>;
+      class function Add(AEventoFoto : TObjectList<TEventoFoto>) : Boolean;
+      class function Update(AEventoFoto : TEventoFoto)                 : Boolean;
+      class function Delete(ACO_Evento_Foto : Integer)     : Boolean;
+
+      property co_evento_foto : integer read Fco_evento_foto write Setco_evento_foto;
+      property co_evento : integer      read Fco_evento      write Setco_evento;
+      property im_foto : String         read Fim_foto        write Setim_foto;
+   end;
+
+implementation
+
+{ TEventoFoto }
+
+uses
+   Dados0;
+
+class function TEventoFoto.Add(AEventoFoto : TObjectList<TEventoFoto>): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+   ALista      : TObjectList<TEventoFoto>;
+   AItens: TEnumerator<TEventoFoto>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('INSERT INTO EVENTO_FOTO (CO_EVENTO_FOTO, CO_EVENTO, IM_FOTO)                   ').
+               Append('                 VALUES (GEN_ID(INC_CO_EVENTO_FOTO, 1), :CO_EVENTO, :IM_FOTO); ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         ALista := TObjectList<TEventoFoto>.Create;
+         AItens := ALista.GetEnumerator;
+
+         while AItens.MoveNext do begin
+
+            AFDQuery.ParamByName('CO_EVENTO').AsInteger := AItens.Current.co_evento;
+
+            AStrStream.Create(AItens.Current.im_foto);
+            AFDQuery.ParamByName('IM_FOTO').LoadFromStream(AStrStream, ftBlob);
+            AStrStream.Free;
+
+            AFDQuery.ExecSQL;
+
+         end;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+      ALista.Free;
+   end;
+
+end;
+
+class function TEventoFoto.Update(AEventoFoto: TEventoFoto): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('UPDATE EVENTO_FOTO                            ').
+               Append('   SET IM_FOTO          = :IM_FOTO            ').
+               Append('   WHERE CO_EVENTO_FOTO = :CO_EVENTO_FOTO AND ').
+               Append('         CO_EVENTO      = :CO_EVENTO;         ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         if AEventoFoto.im_foto <> EmptyStr then begin
+            AStrStream.Create(AEventoFoto.im_foto);
+            AFDQuery.ParamByName('IM_FOTO').LoadFromStream(AStrStream, ftBlob);
+            AStrStream.Free;
+         end else begin
+            AFDQuery.ParamByName('IM_FOTO').Value := null;
+         end;
+
+         AFDQuery.ParamByName('CO_EVENTO_FOTO').AsInteger := AEventoFoto.co_evento_foto;
+         AFDQuery.ParamByName('CO_EVENTO').AsInteger      := AEventoFoto.co_evento;
+
+         AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TEventoFoto.Delete(ACO_Evento_Foto : Integer): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('DELETE FROM EVENTO_FOTO                    ').
+               Append('   WHERE CO_EVENTO_FOTO = :CO_EVENTO_FOTO; ');
+   ADMCon := TDM0.Create(nil);
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         Result :=  ADMCon.Conexao.ExecSQL(AStrBuilder.ToString, [ACO_Evento_Foto]) > 0;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+   end;
+
+end;
+
+class function TEventoFoto.GetAll: TObjectList<TEventoFoto>;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AEventoFoto : TEventoFoto;
+   AStrStream  : TStringStream;
+   AListMembro : TObjectList<TEventoFoto>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_EVENTO_FOTO, CO_EVENTO, IM_FOTO ').
+               Append('   FROM EVENTO_FOTO                       ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+      AListMembro := TObjectList<TEventoFoto>.Create;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString);
+
+         AFDQuery.First;
+
+         while not AFDQuery.Eof do begin
+
+            AEventoFoto                := TEventoFoto.Create;
+            AEventoFoto.co_evento_foto := AFDQuery.FieldByName('CO_EVENTO_FOTO').AsInteger;
+            AEventoFoto.co_evento      := AFDQuery.FieldByName('CO_EVENTO').AsInteger;
+
+            if not AFDQuery.FieldByName('IM_FOTO').IsNull then begin
+               AStrStream.Create(AFDQuery.FieldByName('IM_FOTO').AsBytes);
+               AEventoFoto.im_foto := AStrStream.DataString;
+               AStrStream.Free;
+            end else begin
+               AEventoFoto.im_foto := EmptyStr;
+            end;
+
+            AListMembro.Add(AEventoFoto);
+
+            AFDQuery.Next;
+
+         end;
+
+         Result := AEventoFoto;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TEventoFoto.GetByID(ACO_Evento_Foto: Integer): TEventoFoto;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AEventoFoto : TEventoFoto;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_EVENTO_FOTO, CO_EVENTO, IM_FOTO  ').
+               Append('   FROM EVENTO_FOTO                        ').
+               Append('   WHERE CO_EVENTO_FOTO = :CO_EVENTO_FOTO; ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString, [ACO_Evento_Foto]);
+
+         AEventoFoto                := TEventoFoto.Create;
+         AEventoFoto.co_evento_foto := AFDQuery.FieldByName('CO_EVENTO_FOTO').AsInteger;
+         AEventoFoto.co_evento      := AFDQuery.FieldByName('CO_EVENTO').AsInteger;
+
+         if not AFDQuery.FieldByName('IM_FOTO').IsNull then begin
+            AStrStream.Create(AFDQuery.FieldByName('IM_FOTO').AsBytes);
+            AEventoFoto.im_foto := AStrStream.DataString;
+            AStrStream.Free;
+         end else begin
+            AEventoFoto.im_foto := EmptyStr;
+         end;
+
+         Result := AEventoFoto;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+procedure TEventoFoto.Setco_evento(const Value: integer);
+begin
+  Fco_evento := Value;
+end;
+
+procedure TEventoFoto.Setco_evento_foto(const Value: integer);
+begin
+  Fco_evento_foto := Value;
+end;
+
+procedure TEventoFoto.Setim_foto(const Value: String);
+begin
+  Fim_foto := Value;
+end;
+
+end.

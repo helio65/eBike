@@ -1,0 +1,74 @@
+unit Model.Marca;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants, FireDAC.Stan.Param;
+
+type
+   TMarca = class
+   private
+    Fnm_marca: String;
+    Fco_marca: Integer;
+    Fnm_pais: String;
+    procedure Setco_marca(const Value: Integer);
+    procedure Setnm_marca(const Value: String);
+    procedure Setnm_pais(const Value: String);
+   public
+      class function GetByID(ACO_Marca : Integer) : TMarca;
+      class function GetAll                       : TObjectList<TMarca>;
+      class function Add(AMarca : TMarca)         : Boolean;
+      class function Update(AMarca : TMarca)      : Boolean;
+      class function Delete(ACO_Marca : Integer)  : Boolean;
+
+      property co_marca : Integer read Fco_marca write Setco_marca;
+      property nm_marca : String read Fnm_marca write Setnm_marca;
+      property nm_pais : String read Fnm_pais write Setnm_pais;
+   end;
+
+implementation
+
+{ TMarca }
+
+class function TMarca.Add(AMarca: TMarca): Boolean;
+begin
+
+end;
+
+class function TMarca.Delete(ACO_Marca: Integer): Boolean;
+begin
+
+end;
+
+class function TMarca.GetAll: TObjectList<TMarca>;
+begin
+
+end;
+
+class function TMarca.GetByID(ACO_Marca: Integer): TMarca;
+begin
+
+end;
+
+procedure TMarca.Setco_marca(const Value: Integer);
+begin
+  Fco_marca := Value;
+end;
+
+procedure TMarca.Setnm_marca(const Value: String);
+begin
+  Fnm_marca := Value;
+end;
+
+procedure TMarca.Setnm_pais(const Value: String);
+begin
+  Fnm_pais := Value;
+end;
+
+class function TMarca.Update(AMarca: TMarca): Boolean;
+begin
+
+end;
+
+end.

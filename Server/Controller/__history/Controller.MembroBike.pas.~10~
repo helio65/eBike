@@ -1,0 +1,89 @@
+unit Controller.MembroBike;
+
+interface
+
+uses
+  MVCFramework, MVCFramework.Commons;
+
+type
+
+  [MVCPath('/eBike')]
+  TControllerMembroBike = class(TMVCController)
+  public
+    [MVCPath]
+    [MVCHTTPMethod([httpGET])]
+    procedure Index;
+
+  protected
+    procedure OnBeforeAction(Context: TWebContext; const AActionName: string; var Handled: Boolean); override;
+    procedure OnAfterAction(Context: TWebContext; const AActionName: string); override;
+
+  public
+
+    [MVCPath('/membrobike/($CO_Bike)')]
+    [MVCHTTPMethod([httpGET])]
+    procedure GeMembroBike(CO_Bike: Integer);
+
+    [MVCPath('/membrobike')]
+    [MVCHTTPMethod([httpPOST])]
+    procedure AddMembroBike;
+
+    [MVCPath('/membrobike/($CO_Bike)')]
+    [MVCHTTPMethod([httpPUT])]
+    procedure UpdateMembroBike(CO_Bike: Integer);
+
+    [MVCPath('/membrobike/($CO_Bike)')]
+    [MVCHTTPMethod([httpDELETE])]
+    procedure DeleteMembroBike(CO_Bike: Integer);
+
+  end;
+
+implementation
+
+uses
+  System.SysUtils, MVCFramework.Logger, System.StrUtils;
+
+procedure TControllerMembroBike.Index;
+begin
+  //use Context property to access to the HTTP request and response 
+  Render('Hello DelphiMVCFramework World');
+end;
+
+procedure TControllerMembroBike.OnAfterAction(Context: TWebContext; const AActionName: string); 
+begin
+  { Executed after each action }
+  inherited;
+end;
+
+procedure TControllerMembroBike.OnBeforeAction(Context: TWebContext; const AActionName: string; var Handled: Boolean);
+begin
+  { Executed before each action
+    if handled is true (or an exception is raised) the actual
+    action will not be called }
+  inherited;
+end;
+
+procedure TControllerMembroBike.GeMembroBike(CO_Bike: Integer);
+begin
+  //todo: render the customer by id
+end;
+
+procedure TControllerMembroBike.AddMembroBike;
+
+begin
+  //todo: create a new customer
+end;
+
+procedure TControllerMembroBike.UpdateMembroBike(CO_Bike: Integer);
+begin
+  //todo: update customer by id
+end;
+
+procedure TControllerMembroBike.DeleteMembroBike(CO_Bike: Integer);
+begin
+  //todo: delete customer by id
+end;
+
+
+
+end.

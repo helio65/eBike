@@ -1,0 +1,43 @@
+unit Model.Marca;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants, FireDAC.Stan.Param;
+
+type
+   TMarca = class
+   private
+    Fnm_marca: String;
+    Fco_marca: Integer;
+    Fnm_pais: String;
+    procedure Setco_marca(const Value: Integer);
+    procedure Setnm_marca(const Value: String);
+    procedure Setnm_pais(const Value: String);
+   public
+      property co_marca : Integer read Fco_marca write Setco_marca;
+      property nm_marca : String read Fnm_marca write Setnm_marca;
+      property nm_pais : String read Fnm_pais write Setnm_pais;
+   end;
+
+implementation
+
+{ TMarca }
+
+procedure TMarca.Setco_marca(const Value: Integer);
+begin
+  Fco_marca := Value;
+end;
+
+procedure TMarca.Setnm_marca(const Value: String);
+begin
+  Fnm_marca := Value;
+end;
+
+procedure TMarca.Setnm_pais(const Value: String);
+begin
+  Fnm_pais := Value;
+end;
+
+end.

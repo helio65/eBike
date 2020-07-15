@@ -1,0 +1,431 @@
+unit Model.Membro;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants;
+
+type
+   TMembro = class
+   private
+    Fdt_nascimento: TDateTime;
+    Ftx_email: String;
+    Fim_foto: String;
+    Ftx_problema_saude: String;
+    Fin_lider: Boolean;
+    Fnm_contato: String;
+    Ftx_tipo_saguineo: String;
+    Fnm_membro: String;
+    Fco_membro: Integer;
+    Ftx_chave: String;
+    Fnu_telefone_contato: String;
+    procedure Setco_membro(const Value: Integer);
+    procedure Setdt_nascimento(const Value: TDateTime);
+    procedure Setim_foto(const Value: String);
+    procedure Setin_lider(const Value: Boolean);
+    procedure Setnm_contato(const Value: String);
+    procedure Setnm_membro(const Value: String);
+    procedure Setnu_telefone_contato(const Value: String);
+    procedure Settx_chave(const Value: String);
+    procedure Settx_email(const Value: String);
+    procedure Settx_problema_saude(const Value: String);
+    procedure Settx_tipo_saguineo(const Value: String);
+   public
+      class function GetByID(ACO_Membro : Integer) : TMembro;
+      class function GetAll                        : TObjectList<TMembro>;
+      class function Add(AMembro : TMembro)        : Boolean;
+      class function Update(AMembro : TMembro)     : Boolean;
+      class function Delete(ACO_Membro : Integer)  : Boolean;
+
+      property co_membro : Integer          read Fco_membro           write Setco_membro;
+      property nm_membro : String           read Fnm_membro           write Setnm_membro;
+      property dt_nascimento : TDateTime    read Fdt_nascimento       write Setdt_nascimento;
+      property im_foto : String             read Fim_foto             write Setim_foto;
+      property tx_problema_saude : String   read Ftx_problema_saude   write Settx_problema_saude;
+      property tx_tipo_saguineo : String    read Ftx_tipo_saguineo    write Settx_tipo_saguineo;
+      property nm_contato : String          read Fnm_contato          write Setnm_contato;
+      property nu_telefone_contato : String read Fnu_telefone_contato write Setnu_telefone_contato;
+      property tx_email : String            read Ftx_email            write Settx_email;
+      property in_lider : Boolean           read Fin_lider            write Setin_lider;
+      property tx_chave : String            read Ftx_chave            write Settx_chave;
+   end;
+
+implementation
+
+{ TMembro }
+
+uses
+   Dados0, MethodFactory;
+
+class function TMembro.Add(AMembro: TMembro): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('INSERT INTO MEMBRO (CO_MEMBRO, NM_MEMBRO, DT_NASCIMENTO, IM_FOTO, TX_PROBLEMA_SAUDE, TX_TIPO_SANGUINEO,  ').
+               Append('                    NM_CONTATO, NU_TELEFONE_CONTATO, TX_EMAIL, IN_LIDER)                                 ').
+               Append('            VALUES (GEN_ID(INC_CO_MEMBRO,  1), :NM_MEMBRO, :DT_NASCIMENTO, :IM_FOTO, :TX_PROBLEMA_SAUDE, ').
+               Append('                   :TX_TIPO_SANGUINEO, :NM_CONTATO, :NU_TELEFONE_CONTATO, :TX_EMAIL, :IN_LIDER);         ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.ParamByName('NM_MEMBRO').AsString       := AMembro.nm_membro;
+         AFDQuery.ParamByName('DT_NASCIMENTO').AsDateTime := AMembro.dt_nascimento;
+
+         if AMembro.im_foto <> EmptyStr then begin
+            AStrStream.Create(AMembro.im_foto);
+            AFDQuery.ParamByName('IM_FOTO').LoadFromStream(AStrStream, ftBlob);
+            AStrStream.Free;
+         end else begin
+            AFDQuery.ParamByName('IM_FOTO').Value := null;
+         end;
+
+         AFDQuery.ParamByName('TX_PROBLEMA_SAUDE').AsString   := AMembro.tx_problema_saude;
+         AFDQuery.ParamByName('TX_TIPO_SANGUINEO').AsString   := AMembro.tx_tipo_saguineo;
+         AFDQuery.ParamByName('NM_CONTATO').AsString          := AMembro.nm_contato;
+         AFDQuery.ParamByName('NU_TELEFONE_CONTATO').AsString := AMembro.nu_telefone_contato;
+         AFDQuery.ParamByName('TX_EMAIL').AsString            := AMembro.tx_email;
+         AFDQuery.ParamByName('IN_LIDER').AsBoolean           := AMembro.in_lider;
+         AFDQuery.ParamByName('TX_CHAVE').AsString            := GetRandomNumber(6, 2);
+
+          AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TMembro.Update(AMembro: TMembro): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('UPDATE MEMBRO                                      ').
+               Append('   SET NM_MEMBRO           = :NM_MEMBRO,           ').
+               Append('       DT_NASCIMENTO       = :DT_NASCIMENTO,       ').
+               Append('       IM_FOTO             = :IM_FOTO,             ').
+               Append('       TX_PROBLEMA_SAUDE   = :TX_PROBLEMA_SAUDE,   ').
+               Append('       TX_TIPO_SANGUINEO   = :TX_TIPO_SANGUINEO,   ').
+               Append('       NM_CONTATO          = :NM_CONTATO,          ').
+               Append('       NU_TELEFONE_CONTATO = :NU_TELEFONE_CONTATO, ').
+               Append('       TX_EMAIL            = :TX_EMAIL,            ').
+               Append('       IN_LIDER            = :IN_LIDER             ').
+               Append('   WHERE CO_MEMBRO = :CO_MEMBRO;                   ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.ParamByName('NM_MEMBRO').AsString       := AMembro.nm_membro;
+         AFDQuery.ParamByName('DT_NASCIMENTO').AsDateTime := AMembro.dt_nascimento;
+
+         if AMembro.im_foto <> EmptyStr then begin
+            AStrStream.Create(AMembro.im_foto);
+            AFDQuery.ParamByName('IM_FOTO').LoadFromStream(AStrStream, ftBlob);
+            AStrStream.Free;
+         end else begin
+            AFDQuery.ParamByName('IM_FOTO').Value := null;
+         end;
+
+         AFDQuery.ParamByName('TX_PROBLEMA_SAUDE').AsString   := AMembro.tx_problema_saude;
+         AFDQuery.ParamByName('TX_TIPO_SANGUINEO').AsString   := AMembro.tx_tipo_saguineo;
+         AFDQuery.ParamByName('NM_CONTATO').AsString          := AMembro.nm_contato;
+         AFDQuery.ParamByName('NU_TELEFONE_CONTATO').AsString := AMembro.nu_telefone_contato;
+         AFDQuery.ParamByName('TX_EMAIL').AsString            := AMembro.tx_email;
+         AFDQuery.ParamByName('IN_LIDER').AsBoolean           := AMembro.in_lider;
+         AFDQuery.ParamByName('CO_MEMBRO').AsInteger          := AMembro.co_membro;
+
+         AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+   end;
+
+end;
+
+class function TMembro.Delete(ACO_Membro: Integer): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('DELETE FROM MEMBRO               ').
+               Append('   WHERE CO_MEMBRO = :CO_MEMBRO; ');
+   ADMCon := TDM0.Create(nil);
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         Result :=  ADMCon.Conexao.ExecSQL(AStrBuilder.ToString, [ACO_Membro]) > 0;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+   end;
+
+end;
+
+class function TMembro.GetAll: TObjectList<TMembro>;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AMembro     : TMembro;
+   AStrStream  : TStringStream;
+   AListMembro : TObjectList<TMembro>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_MEMBRO, NM_MEMBRO, DT_NASCIMENTO, IM_FOTO, TX_PROBLEMA_SAUDE, TX_TIPO_SANGUINEO, ').
+               Append('       NM_CONTATO, NU_TELEFONE_CONTATO, TX_EMAIL, IN_LIDER                                 ').
+               Append('   FROM MEMBRO                                                                             ').
+               Append('   ORDER BY NM_MEMBRO          ;                                                           ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString);
+
+         while not AFDQuery.Eof do begin
+
+            AMembro               := TMembro.Create;
+            AMembro.co_membro     := AFDQuery.FieldByName('CO_MEMBRO').AsInteger;
+            AMembro.nm_membro     := AFDQuery.FieldByName('NM_MEMBRO').AsString;
+            AMembro.dt_nascimento := AFDQuery.FieldByName('DT_NASCIMENTO').AsDateTime;
+
+            if not AFDQuery.FieldByName('IM_FOTO').IsNull then begin
+               AStrStream.Create(AFDQuery.FieldByName('IM_FOTO').AsBytes);
+               AMembro.im_foto := AStrStream.DataString;
+               AStrStream.Free;
+            end else begin
+               AMembro.im_foto := EmptyStr;
+            end;
+
+            AMembro.tx_problema_saude   := AFDQuery.FieldByName('TX_PROBLEMA_SAUDE').AsString;
+            AMembro.tx_tipo_saguineo    := AFDQuery.FieldByName('TX_TIPO_SANGUINEO').AsString;
+            AMembro.nm_contato          := AFDQuery.FieldByName('NM_CONTATO').AsString;
+            AMembro.nu_telefone_contato := AFDQuery.FieldByName('NU_TELEFONE_CONTATO').AsString;
+            AMembro.tx_email            := AFDQuery.FieldByName('TX_EMAIL').AsString;
+            AMembro.in_lider            := AFDQuery.FieldByName('IN_LIDER').AsBoolean;
+
+         end;
+
+         Result := AMembro;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TMembro.GetByID(ACO_Membro: Integer): TMembro;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AMembro     : TMembro;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_MEMBRO, NM_MEMBRO, DT_NASCIMENTO, IM_FOTO, TX_PROBLEMA_SAUDE, TX_TIPO_SANGUINEO, ').
+               Append('       NM_CONTATO, NU_TELEFONE_CONTATO, TX_EMAIL, IN_LIDER                                 ').
+               Append('   FROM MEMBRO                                                                             ').
+               Append('   WHERE CO_MEMBRO = :CO_MEMBRO;                                                           ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString, [ACO_Membro]);
+
+         AMembro               := TMembro.Create;
+         AMembro.co_membro     := AFDQuery.FieldByName('CO_MEMBRO').AsInteger;
+         AMembro.nm_membro     := AFDQuery.FieldByName('NM_MEMBRO').AsString;
+         AMembro.dt_nascimento := AFDQuery.FieldByName('DT_NASCIMENTO').AsDateTime;
+
+         if not AFDQuery.FieldByName('IM_FOTO').IsNull then begin
+            AStrStream.Create(AFDQuery.FieldByName('IM_FOTO').AsBytes);
+            AMembro.im_foto := AStrStream.DataString;
+            AStrStream.Free;
+         end else begin
+            AMembro.im_foto := EmptyStr;
+         end;
+
+         AMembro.tx_problema_saude   := AFDQuery.FieldByName('TX_PROBLEMA_SAUDE').AsString;
+         AMembro.tx_tipo_saguineo    := AFDQuery.FieldByName('TX_TIPO_SANGUINEO').AsString;
+         AMembro.nm_contato          := AFDQuery.FieldByName('NM_CONTATO').AsString;
+         AMembro.nu_telefone_contato := AFDQuery.FieldByName('NU_TELEFONE_CONTATO').AsString;
+         AMembro.tx_email            := AFDQuery.FieldByName('TX_EMAIL').AsString;
+         AMembro.in_lider            := AFDQuery.FieldByName('IN_LIDER').AsBoolean;
+
+         Result := AMembro;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+procedure TMembro.Setco_membro(const Value: Integer);
+begin
+  Fco_membro := Value;
+end;
+
+procedure TMembro.Setdt_nascimento(const Value: TDateTime);
+begin
+  Fdt_nascimento := Value;
+end;
+
+procedure TMembro.Setim_foto(const Value: String);
+begin
+  Fim_foto := Value;
+end;
+
+procedure TMembro.Setin_lider(const Value: Boolean);
+begin
+  Fin_lider := Value;
+end;
+
+procedure TMembro.Setnm_contato(const Value: String);
+begin
+  Fnm_contato := Value;
+end;
+
+procedure TMembro.Setnm_membro(const Value: String);
+begin
+  Fnm_membro := Value;
+end;
+
+procedure TMembro.Setnu_telefone_contato(const Value: String);
+begin
+  Fnu_telefone_contato := Value;
+end;
+
+procedure TMembro.Settx_chave(const Value: String);
+begin
+  Ftx_chave := Value;
+end;
+
+procedure TMembro.Settx_email(const Value: String);
+begin
+  Ftx_email := Value;
+end;
+
+procedure TMembro.Settx_problema_saude(const Value: String);
+begin
+  Ftx_problema_saude := Value;
+end;
+
+procedure TMembro.Settx_tipo_saguineo(const Value: String);
+begin
+  Ftx_tipo_saguineo := Value;
+end;
+
+end.

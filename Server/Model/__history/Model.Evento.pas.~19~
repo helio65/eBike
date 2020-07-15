@@ -1,0 +1,302 @@
+unit Model.Evento;
+
+interface
+
+uses
+   System.Classes, System.Generics.Collections, System.SysUtils, Data.DB, FireDAC.Comp.Client,
+   SysTem.Variants, FireDAC.Stan.Param;
+
+type
+   TEvento = class
+   private
+    Fhr_saida: TTime;
+    Ftx_local_concentracao: String;
+    Fnm_evento: String;
+    Fdt_evento: TDateTime;
+    Fco_evento: Integer;
+    Fco_membro: Integer;
+    Fobservacoes: String;
+    procedure Setco_evento(const Value: Integer);
+    procedure Setco_membro(const Value: Integer);
+    procedure Setdt_evento(const Value: TDateTime);
+    procedure Sethr_saida(const Value: TTime);
+    procedure Setnm_evento(const Value: String);
+    procedure Setobservacoes(const Value: String);
+    procedure Settx_local_concentracao(const Value: String);
+   public
+      class function GetByID(ACO_Evento : Integer) : TEvento;
+      class function GetAll                        : TObjectList<TEvento>;
+      class function Add(AEvento : TEvento)        : Boolean;
+      class function Update(AEvento : TEvento)     : Boolean;
+      class function Delete(ACO_Evento : Integer)  : Boolean;
+
+      property co_evento : Integer            read Fco_evento             write Setco_evento;
+      property co_membro : Integer            read Fco_membro             write Setco_membro;
+      property nm_evento : String             read Fnm_evento             write Setnm_evento;
+      property dt_evento : TDateTime          read Fdt_evento             write Setdt_evento;
+      property hr_saida : TTime               read Fhr_saida              write Sethr_saida;
+      property tx_local_concentracao : String read Ftx_local_concentracao write Settx_local_concentracao;
+      property tx_observacoes : String           read Fobservacoes           write Setobservacoes;
+   end;
+
+implementation
+
+uses
+   Dados0;
+
+{ TEvento }
+
+class function TEvento.Add(AEvento: TEvento): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('INSERT INTO EVENTO (CO_EVENTO, CO_MEMBRO, NM_EVENTO, DT_EVENTO, HR_SAIDA, TX_LOCAL_CONCENTRACAO, TX_OBSERVACOES)                       ').
+               Append('            VALUES (GEN_ID(INC_CO_EVENTO, 1), :CO_MEMBRO, :NM_EVENTO, :DT_EVENTO, :HR_SAIDA, :TX_LOCAL_CONCENTRACAO, :TX_OBSERVACOES); ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.ParamByName('CO_MEMBRO').AsInteger            := AEvento.co_membro;
+         AFDQuery.ParamByName('DT_EVENTO').AsDateTime           := AEvento.dt_evento;
+         AFDQuery.ParamByName('HR_SAIDA').AsTime                := AEvento.hr_saida;
+         AFDQuery.ParamByName('TX_LOCAL_CONCENTRACAO').AsString := AEvento.tx_local_concentracao;
+         AFDQuery.ParamByName('TX_OBSERVACOES').AsString        := AEvento.tx_observacoes;
+
+         AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+end;
+
+class function TEvento.Update(AEvento: TEvento): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AStrStream  : TStringStream;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('UPDATE EVENTO                                          ').
+               Append('   SET CO_MEMBRO             = :CO_MEMBRO,             ').
+               Append('       NM_EVENTO             = :NM_EVENTO,             ').
+               Append('       DT_EVENTO             = :DT_EVENTO,             ').
+               Append('       HR_SAIDA              = :HR_SAIDA,              ').
+               Append('       TX_LOCAL_CONCENTRACAO = :TX_LOCAL_CONCENTRACAO, ').
+               Append('       TX_OBSERVACOES        = :TX_OBSERVACOES         ').
+               Append('   WHERE CO_EVENTO = :CO_EVENTO;                       ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+   AFDQuery.SQL.Text   := AStrBuilder.ToString;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         AFDQuery.ParamByName('CO_MEMBRO').AsInteger            := AEvento.co_membro;
+         AFDQuery.ParamByName('DT_EVENTO').AsDateTime           := AEvento.dt_evento;
+         AFDQuery.ParamByName('HR_SAIDA').AsTime                := AEvento.hr_saida;
+         AFDQuery.ParamByName('TX_LOCAL_CONCENTRACAO').AsString := AEvento.tx_local_concentracao;
+         AFDQuery.ParamByName('TX_OBSERVACOES').AsString        := AEvento.tx_observacoes;
+         AFDQuery.ParamByName('CO_EVENTO').AsInteger            := AEvento.co_evento;
+
+         AFDQuery.ExecSQL;
+
+         Result := True;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+class function TEvento.Delete(ACO_Evento: Integer): Boolean;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('DELETE FROM EVENTO               ').
+               Append('   WHERE CO_EVENTO = :CO_EVENTO; ');
+   ADMCon := TDM0.Create(nil);
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+
+      try
+
+         Result :=  ADMCon.Conexao.ExecSQL(AStrBuilder.ToString, [ACO_Evento]) > 0;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            Result := False;
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+   end;
+
+end;
+
+class function TEvento.GetAll: TObjectList<TEvento>;
+begin
+
+end;
+
+class function TEvento.GetByID(ACO_Evento: Integer): TEvento;
+var
+   AStrBuilder : TStringBuilder;
+   ADMCon      : TDM0;
+   AFDQuery    : TFDQuery;
+   AEvento     : TEvento;
+   AStrStream  : TStringStream;
+   AListeEvento : TObjectList<TEvento>;
+begin
+
+   AStrBuilder := TStringBuilder.Create;
+   AStrBuilder.Append('SELECT CO_EVENTO, CO_MEMBRO, NM_EVENTO, DT_EVENTO, HR_SAIDA, TX_LOCAL_CONCENTRACAO, TX_OBSERVACOES ').
+               Append('   FROM EVENTO                                                                             ').
+               Append('   ORDER BY DT_EVENTO          ;                                                           ');
+
+   ADMCon := TDM0.Create(nil);
+
+   AFDQuery            := TFDQuery.Create(nil);
+   AFDQuery.Connection := ADMCon.Conexao;
+
+   try
+
+      ADMCon.Conexao.StartTransaction;
+      AListeEvento := TObjectList<TEvento>.Create;
+
+      try
+
+         AFDQuery.Open(AStrBuilder.ToString);
+
+         AFDQuery.First;
+
+         while not AFDQuery.Eof do begin
+
+            AEvento                       := TEvento.Create;
+            AEvento.co_evento             := AFDQuery.FieldByName('CO_EVENTO').AsInteger;
+            AEvento.co_membro             := AFDQuery.FieldByName('CO_MEMBRO').AsInteger;
+            AEvento.nm_evento             := AFDQuery.FieldByName('NM_EVENTO').AsString;
+            AEvento.dt_evento             := AFDQuery.FieldByName('DT_EVENTO').AsDateTime;
+            AEvento.hr_saida              := AFDQuery.FieldByName('HR_SAIDA').AsDateTime;
+            AEvento.tx_local_concentracao := AFDQuery.FieldByName('TX_LOCAL_CONCENTRACAO').AsString;
+            AEvento.tx_observacoes        := AFDQuery.FieldByName('TX_OBSERVACOES').AsString;
+
+            AListeEvento.Add(AEvento);
+
+            AFDQuery.Next;
+
+         end;
+
+         Result := AListeEvento;
+
+         ADMCon.Conexao.Commit;
+
+      except
+         on e : Exception do begin
+            ADMCon.Conexao.Rollback;
+            raise Exception.Create(e.Message);
+         end;
+      end;
+
+   finally
+      AStrBuilder.Free;
+      ADMCon.Free;
+      AFDQuery.Free;
+   end;
+
+end;
+
+procedure TEvento.Setco_evento(const Value: Integer);
+begin
+  Fco_evento := Value;
+end;
+
+procedure TEvento.Setco_membro(const Value: Integer);
+begin
+  Fco_membro := Value;
+end;
+
+procedure TEvento.Setdt_evento(const Value: TDateTime);
+begin
+  Fdt_evento := Value;
+end;
+
+procedure TEvento.Sethr_saida(const Value: TTime);
+begin
+  Fhr_saida := Value;
+end;
+
+procedure TEvento.Setnm_evento(const Value: String);
+begin
+  Fnm_evento := Value;
+end;
+
+procedure TEvento.Setobservacoes(const Value: String);
+begin
+  Fobservacoes := Value;
+end;
+
+procedure TEvento.Settx_local_concentracao(const Value: String);
+begin
+  Ftx_local_concentracao := Value;
+end;
+
+end.
